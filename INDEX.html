@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#138808">
+<title>Tricolor Transaction Hub</title>
+<style>
+:root{--saffron:#ff9933;--green:#138808;--navy:#10243a;--ink:#172337;--muted:#687589;--paper:#f5f7fa}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#fff7ed,#f3f8f1 55%,#eef5ff);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--ink)}
+header{background:linear-gradient(110deg,#ff9933 0 33.3%,#fff 33.3% 66.6%,#138808 66.6%);padding:5px}
+.head{background:#10243a;color:white;padding:20px clamp(16px,4vw,42px);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(21px,4vw,30px);letter-spacing:.4px}.sub{color:#c9d5e2;font-size:12px;margin-top:5px;letter-spacing:1.4px}
+.pill{border:1px solid #54708c;border-radius:99px;padding:8px 12px;font-size:12px;color:#e9f4ff}
+main{max-width:1100px;margin:24px auto;padding:0 16px 50px}.grid{display:grid;grid-template-columns: minmax(280px, .85fr) minmax(320px,1.4fr);gap:18px}
+.panel{background:#fff;border:1px solid #e4e9ef;border-radius:18px;padding:20px;box-shadow:0 12px 35px #18324b0d}
+h2{font-size:17px;margin:0 0 16px}.field{margin:12px 0}.field label{display:block;font-size:12px;font-weight:700;color:#536176;margin-bottom:6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #d8e0e8;border-radius:10px;background:#fbfcfd;font:inherit;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #13880817}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:10px;padding:12px 15px;font-weight:750;cursor:pointer;font:inherit}
+.primary{background:var(--green);color:white;width:100%;margin-top:8px}.secondary{background:#edf3f8;color:#18324b}.orange{background:#fff0e1;color:#8a4600}.danger{background:#fff0f0;color:#a12c2c}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.actions .btn{flex:1;min-width:120px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}.stat{padding:13px;border-radius:12px;background:#f7f9fb}.stat small{color:var(--muted);font-size:11px}.stat strong{display:block;font-size:19px;margin-top:5px}.income{color:#138808}.expense{color:#c44b27}
+.toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}.toolbar input{max-width:260px}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}th{text-align:left;background:#f1f5f8;color:#4d5c6d;padding:11px}td{padding:11px;border-bottom:1px solid #edf0f3}td:last-child,th:last-child{text-align:right}
+.tag{font-size:11px;font-weight:700;padding:4px 8px;border-radius:99px}.tag.in{background:#e8f6e8;color:#167b16}.tag.out{background:#fff0e9;color:#b34a20}
+.note{font-size:12px;color:var(--muted);line-height:1.5}.status{font-size:12px;color:#657386;margin-top:10px;min-height:18px}.status.ok{color:#138808}.status.err{color:#b42318}
+.setup{background:#fff8e9;border:1px solid #ffdfad;border-radius:12px;padding:13px;margin-top:14px;font-size:12px;line-height:1.55}.setup code{background:#f1e8d9;padding:2px 4px;border-radius:4px}
+.hidden{display:none!important}
+#receipt{position:fixed;left:-99999px;top:0;width:900px;background:white;padding:34px;color:#142337;font-family:Arial,sans-serif}
+#receipt .stripe{height:9px;background:linear-gradient(90deg,#ff9933 0 33.3%,white 33.3% 66.6%,#138808 66.6%)}
+#receipt h2{font-size:28px;margin:22px 0 5px}#receipt p{color:#64748b}#receipt table{min-width:0;margin-top:20px}#receipt th{background:#10243a;color:white}#receipt td{font-size:15px}
+footer{text-align:center;color:#718096;font-size:11px;padding:20px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr 1fr}.panel{padding:16px}.head{padding:16px}}
+</style>
+</head>
+<body>
+<header><div class="head"><div><h1>🇮🇳 TRICOLOR TRANSACTION HUB</h1><div class="sub">PERSONAL LEDGER · INCOME & EXPENSES</div></div><div class="pill" id="cloudBadge">● Cloud not configured</div></div></header>
+<main>
+<div class="grid">
+<section class="panel">
+<h2>＋ Add transaction</h2>
+<form id="txForm">
+<div class="row">
+<div class="field"><label for="type">TRANSACTION TYPE</label><select id="type"><option value="income">Income</option><option value="expense">Expense</option></select></div>
+<div class="field"><label for="date">DATE</label><input id="date" type="date" required></div>
+</div>
+<div class="field"><label for="description">DESCRIPTION</label><input id="description" maxlength="80" placeholder="e.g. Salary, groceries, recharge" required></div>
+<div class="row">
+<div class="field"><label for="amount">AMOUNT (₹)</label><input id="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required></div>
+<div class="field"><label for="category">CATEGORY</label><select id="category"><option>General</option><option>Food</option><option>Shopping</option><option>Travel</option><option>Salary</option><option>Business</option><option>Bills</option><option>Education</option><option>Other</option></select></div>
+</div>
+<div class="field"><label for="note">NOTE (OPTIONAL)</label><input id="note" maxlength="120" placeholder="Additional details"></div>
+<button class="btn primary" type="submit">SAVE TRANSACTION</button>
+</form>
+<div class="status" id="formStatus" aria-live="polite"></div>
+<div class="setup" id="setupBox"><b>Cloud setup needed (free tier available)</b><br>To sync across devices, create a Firebase project, enable Firestore Database and Anonymous Authentication, then paste your web app config in the setup section below. Until then, this website saves data in this browser only.</div>
+</section>
+<section class="panel">
+<h2>Account overview</h2>
+<div class="stats">
+<div class="stat"><small>TOTAL INCOME</small><strong class="income" id="totalIncome">₹0.00</strong></div>
+<div class="stat"><small>TOTAL EXPENSE</small><strong class="expense" id="totalExpense">₹0.00</strong></div>
+<div class="stat"><small>BALANCE</small><strong id="balance">₹0.00</strong></div>
+</div>
+<div class="toolbar"><h2 style="margin:0">Transaction history</h2><input id="search" placeholder="Search transactions…"></div>
+<div class="actions">
+<button class="btn orange" id="shareBtn">▧ Create & share image</button>
+<button class="btn secondary" id="csvBtn">↓ Export CSV</button>
+</div>
+<div class="tablewrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Amount</th><th></th></tr></thead><tbody id="txRows"><tr><td colspan="6" style="text-align:center;color:#8491a2">No transactions yet. Add your first entry.</td></tr></tbody></table></div>
+<div class="status" id="shareStatus" aria-live="polite"></div>
+</section>
+</div>
+<section class="panel" style="margin-top:18px">
+<h2>☁️ Free cloud sync configuration</h2>
+<p class="note">This is a static website, so cloud syncing needs your own Firebase project. Firebase's no-cost Spark plan is suitable for a small personal ledger within its quotas. Never share your Firebase service-account key here; this app only uses public web-app config.</p>
+<div class="row">
+<div class="field"><label>API KEY</label><input id="apiKey" placeholder="AIza…"></div>
+<div class="field"><label>AUTH DOMAIN</label><input id="authDomain" placeholder="your-project.firebaseapp.com"></div>
+</div>
+<div class="row">
+<div class="field"><label>PROJECT ID</label><input id="projectId" placeholder="your-project-id"></div>
+<div class="field"><label>APP ID</label><input id="appId" placeholder="1:…:web:…"></div>
+</div>
+<div class="actions"><button class="btn primary" style="margin:0" id="connectBtn">CONNECT CLOUD</button><button class="btn secondary" id="localBtn">USE DEVICE ONLY</button></div>
+<div class="status" id="cloudStatus" aria-live="polite"></div>
+<p class="note">Firestore rules for a quick personal test are shown in the setup guide. For real use, secure the database with authentication and per-user access rules. Cloud sync is not active until configured successfully.</p>
+</section>
+</main>
+<footer>Made for your everyday accounts · Tricolor Transaction Hub</footer>
+<div id="receipt"><div class="stripe"></div><h2>TRANSACTION STATEMENT</h2><p id="receiptDate"></p><h3 id="receiptOwner">PERSONAL LEDGER</h3><div id="receiptStats"></div><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Amount</th></tr></thead><tbody id="receiptRows"></tbody></table><p style="margin-top:28px">Generated by Tricolor Transaction Hub</p><div class="stripe"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {getAuth,signInAnonymously} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {getFirestore,collection,addDoc,deleteDoc,doc,onSnapshot,query,orderBy} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const $=id=>document.getElementById(id), money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+let transactions=[], db=null, user=null, unsubscribe=null, cloud=false;
+const STORAGE='tricolor_transaction_hub_v1';
+const today=new Date();$('date').value=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+function setStatus(id,msg,kind=''){const e=$(id);e.textContent=msg;e.className='status '+kind}
+function loadLocal(){try{return JSON.parse(localStorage.getItem(STORAGE)||'[]')}catch{return []}}
+function saveLocal(){localStorage.setItem(STORAGE,JSON.stringify(transactions))}
+function totals(list=transactions){return list.reduce((a,t)=>{a[t.type]+=Number(t.amount);return a},{income:0,expense:0})}
+function render(){
+ const t=totals();$('totalIncome').textContent=money(t.income);$('totalExpense').textContent=money(t.expense);$('balance').textContent=money(t.income-t.expense);
+ const term=$('search').value.toLowerCase();const filtered=transactions.filter(x=>(x.description+' '+x.category+' '+x.note).toLowerCase().includes(term)).sort((a,b)=>b.date.localeCompare(a.date));
+ $('txRows').innerHTML=filtered.length?filtered.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.description)}</td><td>${esc(x.category)}</td><td><span class="tag ${x.type==='income'?'in':'out'}">${x.type==='income'?'INCOME':'EXPENSE'}</span></td><td style="font-weight:700;color:${x.type==='income'?'#138808':'#c44b27'}">${x.type==='income'?'+':'−'}${money(x.amount)}</td><td><button class="btn danger" style="padding:6px 9px" data-del="${esc(x.id)}" aria-label="Delete transaction">×</button></td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:#8491a2">No matching transactions.</td></tr>';
+ $('txRows').querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>removeTx(b.dataset.del)));
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('txForm').addEventListener('submit',async e=>{
+ e.preventDefault();const item={type:$('type').value,date:$('date').value,description:$('description').value.trim(),amount:Number($('amount').value),category:$('category').value,note:$('note').value.trim(),createdAt:Date.now()};
+ if(!item.description||!item.date||!Number.isFinite(item.amount)||item.amount<=0)return setStatus('formStatus','Enter a description, date and amount greater than zero.','err');
+ try{
+  if(cloud){const ref=await addDoc(collection(db,'users',user.uid,'transactions'),item);item.id=ref.id}
+  else{item.id=crypto.randomUUID();transactions.push(item);saveLocal()}
+  if(cloud){}else render();
+  $('txForm').reset();$('date').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+  setStatus('formStatus',cloud?'Saved to your cloud account.':'Saved on this device.','ok');
+ }catch(err){setStatus('formStatus','Could not save: '+err.message,'err')}
+});
+async function removeTx(id){if(!confirm('Delete this transaction?'))return;try{if(cloud)await deleteDoc(doc(db,'users',user.uid,'transactions',id));else{transactions=transactions.filter(x=>x.id!==id);saveLocal();render()}}catch(e){setStatus('formStatus','Delete failed: '+e.message,'err')}}
+$('search').addEventListener('input',render);
+$('localBtn').onclick=()=>{if(unsubscribe)unsubscribe();cloud=false;db=null;user=null;transactions=loadLocal();$('cloudBadge').textContent='● Device only';$('setupBox').classList.remove('hidden');render();setStatus('cloudStatus','Using this browser only.','ok')};
+$('connectBtn').onclick=async()=>{
+ const cfg={apiKey:$('apiKey').value.trim(),authDomain:$('authDomain').value.trim(),projectId:$('projectId').value.trim(),appId:$('appId').value.trim()};
+ if(Object.values(cfg).some(v=>!v))return setStatus('cloudStatus','Please fill all four Firebase config fields.','err');
+ try{
+  setStatus('cloudStatus','Connecting…');const app=initializeApp(cfg,'ledger-'+Date.now());const auth=getAuth(app);const credential=await signInAnonymously(auth);user=credential.user;db=getFirestore(app);cloud=true;
+  if(unsubscribe)unsubscribe();unsubscribe=onSnapshot(query(collection(db,'users',user.uid,'transactions'),orderBy('createdAt','desc')),snap=>{transactions=snap.docs.map(d=>({id:d.id,...d.data()}));render()},err=>setStatus('cloudStatus','Sync error: '+err.message,'err'));
+  $('cloudBadge').textContent='● Cloud connected';$('setupBox').classList.add('hidden');setStatus('cloudStatus','Connected. Your transactions now sync to this Firebase account.','ok');
+ }catch(e){cloud=false;setStatus('cloudStatus','Connection failed: '+e.message,'err')}
+};
+$('csvBtn').onclick=()=>{
+ const rows=[['Date','Description','Category','Type','Amount','Note'],...transactions.map(t=>[t.date,t.description,t.category,t.type,t.amount,t.note])];
+ const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'transactions.csv');
+};
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+$('shareBtn').onclick=async()=>{
+ if(!transactions.length)return setStatus('shareStatus','Add at least one transaction before creating a statement.','err');
+ if(!window.html2canvas)return setStatus('shareStatus','Image library did not load. Check your internet connection.','err');
+ const t=totals();$('receiptDate').textContent='Generated '+new Date().toLocaleString('en-IN');$('receiptStats').innerHTML=`<p><b>Total income:</b> ${money(t.income)} &nbsp; <b>Total expense:</b> ${money(t.expense)} &nbsp; <b>Balance:</b> ${money(t.income-t.expense)}</p>`;
+ $('receiptRows').innerHTML=[...transactions].sort((a,b)=>a.date.localeCompare(b.date)).map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.description)}</td><td>${esc(x.category)}</td><td>${x.type.toUpperCase()}</td><td>${x.type==='income'?'+':'−'}${money(x.amount)}</td></tr>`).join('');
+ try{
+  const canvas=await html2canvas($('receipt'),{scale:2,backgroundColor:'#ffffff'});const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));const file=new File([blob],'transaction-statement.png',{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Transaction Statement',text:'My transaction statement'});setStatus('shareStatus','Share sheet opened. Choose WhatsApp and your own chat.','ok')}
+  else{download(blob,'transaction-statement.png');window.open('https://wa.me/','_blank');setStatus('shareStatus','Image downloaded. In WhatsApp, open your own chat and attach transaction-statement.png.','ok')}
+ }catch(e){if(e.name!=='AbortError')setStatus('shareStatus','Could not create/share image: '+e.message,'err')}
+};
+transactions=loadLocal();render();$('cloudBadge').textContent='● Device only';
+</script>
+</body>
+</html>
